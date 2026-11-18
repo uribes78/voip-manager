@@ -10,6 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
     "@lucide/vue": "^1.74.0",
     "@tanstack/vue-query": "^5.108.0",
     "@voip-manager/shared": "*",
@@ -17,6 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.5.2",
+    "codemirror": "^6.0.2",
     "pinia": "^4.1.0",
     "reka-ui": "^2.11.0",
     "shadcn-vue": "^2.9.0",

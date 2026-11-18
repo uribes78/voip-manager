@@ -90,6 +90,12 @@ luego `endpoint`, `registration` y `ami` conforme cambian.
 ## Configuración (`/settings`) — `settings:read`
 | GET | `/settings/asterisk-config` | — | `AsteriskConfigBundle` (res_odbc.conf, extconfig.conf, sorcery.conf, cdr_adaptive_odbc.conf, odbc.ini, manager.conf, extensions.conf) |
 | GET | `/settings/audit` | `PaginationQuery` | `Paginated<AuditEntry>` |
+| GET | `/settings/files` | — | `ConfigFileInfo[]` (archivos de /etc/asterisk editables; backend `fs` si `ASTERISK_ETC_PATH` existe, si no `ami`) |
+| GET | `/settings/files/:file` | — | `ConfigFileContent` (texto + hash) |
+| PUT | `/settings/files/:file` | `ConfigFileWriteInput` | `ConfigFileWriteResult` (`settings:write`; respaldo en `.voip-manager-backups/`, 409 si el hash cambió, recarga el módulo por AMI) |
+| GET | `/settings/features` | — | `FeaturesSummary` (códigos de features.conf, lotes de res_parking.conf y Pickup/Park del dialplan) |
+
+`features.conf` y `res_parking.conf` no tienen soporte Realtime en Asterisk; por eso se editan como archivo.
 
 ## Salud
 | GET | `/health` | — | `{ status: 'ok'|'degraded', db, ami, schema: { config, cdr }, uptime, version }` |

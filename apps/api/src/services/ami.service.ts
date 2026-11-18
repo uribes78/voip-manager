@@ -10,6 +10,18 @@ import { asteriskUnavailable } from './errors.js';
 
 type Manager = ReturnType<typeof AsteriskManager>;
 
+export interface AmiConfigCategory {
+  name: string;
+  lines: Array<{ var: string; value: string }>;
+}
+export interface AmiConfigAction {
+  action: 'NewCat' | 'RenameCat' | 'DelCat' | 'EmptyCat' | 'Update' | 'Delete' | 'Append' | 'Insert';
+  cat: string;
+  var?: string;
+  value?: string;
+  options?: string;
+}
+
 const RELOAD_COMMANDS: Record<ReloadModule, string[]> = {
   pjsip: [
     'module reload res_pjsip.so',
@@ -295,6 +307,55 @@ export class AmiService extends EventEmitter {
       };
     } catch (e) {
       return { actionId: '', response: 'Error', message: (e as Error).message, ok: false };
+    }
+  }
+
+  // ---------- Archivos de configuración vía AMI ----------
+  /** GetConfig: categorías y líneas (sin comentarios) de un archivo en /etc/asterisk del servidor Asterisk. */
+  async getConfig(file: string): Promise<AmiConfigCategory[]> {
+    const res = await this.action({ action: 'GetConfig', filename: file }, 15_000);
+    const cats = new Map<number, AmiConfigCategory & { order: Map<number, string> }>();
+    const ensure = (i: number) => {
+      let c = cats.get(i);
+      if (!c) {
+        c = { name: '', lines: [], order: new Map() };
+        cats.set(i, c);
+      }
+      return c;
+    };
+    for (const [k, v] of Object.entries(res)) {
+      let m = /^category-(\d+)$/.exec(k);
+      if (m) ensure(Number(m[1])).name = String(v);
+      m = /^line-(\d+)-(\d+)$/.exec(k);
+      if (m) ensure(Number(m[1])).order.set(Number(m[2]), String(v));
+    }
+    return [...cats.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([, c]) => ({
+        name: c.name,
+        lines: [...c.order.entries()]
+          .sort((a, b) => a[0] - b[0])
+          .map(([, raw]) => {
+            const eq = raw.indexOf('=');
+            return eq < 0 ? { var: raw, value: '' } : { var: raw.slice(0, eq).trim(), value: raw.slice(eq + 1).trim() };
+          }),
+      }));
+  }
+
+  /** UpdateConfig en lotes. Cada petición carga, modifica y guarda el archivo en el servidor Asterisk. */
+  async updateConfig(file: string, actions: AmiConfigAction[], chunkSize = 40): Promise<void> {
+    for (let i = 0; i < actions.length; i += chunkSize) {
+      const chunk = actions.slice(i, i + chunkSize);
+      const payload: AmiAction = { action: 'UpdateConfig', srcfilename: file, dstfilename: file, reload: 'no' };
+      chunk.forEach((a, idx) => {
+        const n = String(idx).padStart(6, '0');
+        payload[`action-${n}`] = a.action;
+        payload[`cat-${n}`] = a.cat;
+        if (a.var !== undefined) payload[`var-${n}`] = a.var;
+        if (a.value !== undefined) payload[`value-${n}`] = a.value.replace(/[\r\n]+/g, ' ');
+        if (a.options !== undefined) payload[`options-${n}`] = a.options;
+      });
+      await this.action(payload, 20_000);
     }
   }
 

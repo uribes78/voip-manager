@@ -11,12 +11,21 @@ import CopyButton from '@/components/common/CopyButton.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import TableSkeleton from '@/components/common/TableSkeleton.vue';
 import TablePagination from '@/components/common/TablePagination.vue';
+import ConfigFilesEditor from '@/components/settings/ConfigFilesEditor.vue';
+import FeatureCodesCard from '@/components/settings/FeatureCodesCard.vue';
 import { settingsService } from '@/services';
 import { errorMessage } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
 
 const config = useQuery({ queryKey: ['settings', 'asterisk-config'], queryFn: settingsService.asteriskConfig, staleTime: 60_000 });
 const health = useQuery({ queryKey: ['health'], queryFn: settingsService.health, refetchInterval: 30_000 });
+
+const section = ref<'features' | 'files' | 'templates' | 'audit'>('features');
+const editorFile = ref('features.conf');
+function openEditor(file: string) {
+  editorFile.value = file;
+  section.value = 'files';
+}
 
 const activeFile = ref('');
 watch(
@@ -37,16 +46,33 @@ function detailsText(d: unknown) {
 </script>
 
 <template>
-  <PageHeader title="Configuración" description="Archivos de Asterisk generados a partir de la configuración del servicio y bitácora de cambios.">
+  <PageHeader title="Configuración" description="Códigos de función, archivos de Asterisk, plantillas generadas y bitácora de cambios.">
     <Badge v-if="health.data.value" :variant="health.data.value.status === 'ok' ? 'outline' : 'destructive'" class="gap-1.5">
       API {{ health.data.value.status }} · BD {{ health.data.value.db ? 'ok' : 'error' }} · AMI {{ health.data.value.ami ? 'ok' : 'sin conexión' }}
     </Badge>
   </PageHeader>
 
+  <Tabs v-model="section" class="gap-4">
+    <TabsList>
+      <TabsTrigger value="features">Códigos de función</TabsTrigger>
+      <TabsTrigger value="files">Archivos de Asterisk</TabsTrigger>
+      <TabsTrigger value="templates">Plantillas generadas</TabsTrigger>
+      <TabsTrigger value="audit">Auditoría</TabsTrigger>
+    </TabsList>
+
+    <TabsContent value="features">
+      <FeatureCodesCard @edit="openEditor" />
+    </TabsContent>
+
+    <TabsContent value="files">
+      <ConfigFilesEditor :key="editorFile" :initial-file="editorFile" />
+    </TabsContent>
+
+    <TabsContent value="templates">
   <Card>
     <CardHeader>
-      <CardTitle>Archivos de configuración de Asterisk</CardTitle>
-      <CardDescription>Copia cada archivo a <code>/etc/asterisk</code> (u <code>/etc</code> para odbc.ini) en el servidor Asterisk y recarga los módulos.</CardDescription>
+      <CardTitle>Plantillas de configuración</CardTitle>
+      <CardDescription>Generadas a partir de la configuración del servicio. Cópialas a <code>/etc/asterisk</code> (u <code>/etc</code> para odbc.ini) o pégalas en el editor de archivos.</CardDescription>
     </CardHeader>
     <CardContent>
       <Skeleton v-if="config.isPending.value" class="h-64 w-full" />
@@ -67,7 +93,10 @@ function detailsText(d: unknown) {
     </CardContent>
   </Card>
 
-  <Card class="mt-6 overflow-hidden">
+    </TabsContent>
+
+    <TabsContent value="audit">
+  <Card class="overflow-hidden">
     <CardHeader>
       <CardTitle>Auditoría</CardTitle>
       <CardDescription>Operaciones realizadas desde el servicio.</CardDescription>
@@ -100,4 +129,6 @@ function detailsText(d: unknown) {
       <TablePagination v-model:page="auditFilters.page" v-model:page-size="auditFilters.pageSize" :total="audit.data.value?.total ?? 0" />
     </CardContent>
   </Card>
+    </TabsContent>
+  </Tabs>
 </template>

@@ -9,3 +9,4 @@ export * from './cdr.js';
 export * from './ami.js';
 export * from './logs.js';
 export * from './settings.js';
+export * from './config-files.js';

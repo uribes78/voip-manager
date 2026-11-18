@@ -61,6 +61,7 @@ services:
       - '10000-10100:10000-10100/udp'  # RTP (rango reducido para desarrollo)
     volumes:
       - ./docker/asterisk/conf:/etc/asterisk/custom:ro
+      - ./docker/asterisk/etc:/etc/asterisk      # editable desde la UI (ASTERISK_ETC_PATH)
       - ./docker/asterisk/log:/var/log/asterisk
     healthcheck:
       test: ['CMD', 'asterisk', '-rx', 'core show version']

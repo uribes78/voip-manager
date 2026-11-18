@@ -53,6 +53,19 @@ extensión → ver estado en el Dashboard → probar con "Probar llamada" (Origi
 | Dialplan | `extensions` (`context, exten, priority, app, appdata`) | pbx_realtime exige declarar cada contexto en `extensions.conf` con `switch => Realtime/<ctx>@extensions`; el servicio genera ese snippet en Configuración |
 | CDR | `cdr` | `cdr_adaptive_odbc` |
 
+### Features (códigos de función) y archivos sin soporte Realtime
+
+`features.conf` (featuremap, applicationmap, pickupexten) y `res_parking.conf` no tienen soporte Realtime en
+Asterisk. La pestaña **Configuración → Archivos de Asterisk** los edita como texto con resaltado y los aplica
+con el comando de recarga correspondiente (`module reload features`, `module reload res_parking.so`, ...):
+
+- Backend `fs`: si `ASTERISK_ETC_PATH` apunta a `/etc/asterisk` (mismo host, carpeta compartida o el bind mount
+  `docker/asterisk/etc` del compose). Conserva comentarios y guarda respaldos en `.voip-manager-backups/`.
+- Backend `ami`: si no hay acceso a la carpeta, usa `GetConfig`/`UpdateConfig` por AMI. Funciona en remoto, pero
+  Asterisk no devuelve comentarios, así que se pierden al guardar.
+
+La pestaña **Códigos de función** resume lo definido en ambos archivos y las extensiones `Pickup`/`Park` del dialplan.
+
 Eliminar una extensión/troncal borra sus filas `ps_*` (deja de autenticar de inmediato) y conserva la configuración en
 `vm_endpoint_meta.snapshot` para poder restaurarla.
 

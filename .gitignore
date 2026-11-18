@@ -8,5 +8,6 @@ coverage/
 .DS_Store
 docker/mariadb/data/
 docker/asterisk/log/
+docker/asterisk/etc/
 .vite/
 *.tsbuildinfo

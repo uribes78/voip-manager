@@ -53,6 +53,7 @@ const EnvSchema = z.object({
 
   ASTERISK_LOG_PATH: pathFromEnv.default('/var/log/asterisk/full'),
   SERVICE_LOG_PATH: pathFromEnv.optional(),
+  ASTERISK_ETC_PATH: pathFromEnv.optional(),
 
   DEFAULT_CONTEXT: z.string().default('from-internal'),
   DEFAULT_TRANSPORT: z.string().default('transport-udp'),

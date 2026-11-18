@@ -11,9 +11,22 @@ import {
   deletePjsipRows, endpointExistsInAsterisk, getAnyMeta, getMeta, listMeta, writePjsipRows,
 } from '../pjsip/store.js';
 import { extensionToRows, metaToExtension, metaToSummary } from './mapper.js';
+import { HintsService } from '../../services/hints.service.js';
 
 export class ExtensionService {
-  constructor(private readonly app: FastifyInstance) {}
+  readonly hints: HintsService;
+  constructor(private readonly app: FastifyInstance) {
+    this.hints = new HintsService(app);
+  }
+
+  /** Regenera los hints en extensions.conf; un fallo no debe impedir la operación principal. */
+  private async syncHints() {
+    try {
+      await this.hints.sync(true);
+    } catch (e) {
+      this.app.log.warn({ err: (e as Error).message }, 'No se pudieron sincronizar los hints BLF');
+    }
+  }
 
   private status(id: string) {
     return this.app.ami.cache.get(id);
@@ -57,6 +70,7 @@ export class ExtensionService {
       }
     });
     this.app.ami.requestRefresh();
+    await this.syncHints();
     return this.get(input.id);
   }
 
@@ -78,6 +92,7 @@ export class ExtensionService {
         .where(eq(vmEndpointMeta.endpointId, id));
     });
     this.app.ami.requestRefresh();
+    await this.syncHints();
     return this.get(id);
   }
 
@@ -94,6 +109,7 @@ export class ExtensionService {
     });
     this.app.ami.cache.removeEndpoint(id);
     this.app.ami.requestRefresh();
+    await this.syncHints();
   }
 
   async restore(id: string): Promise<Extension> {
@@ -110,6 +126,7 @@ export class ExtensionService {
         .where(eq(vmEndpointMeta.endpointId, id));
     });
     this.app.ami.requestRefresh();
+    await this.syncHints();
     return this.get(id);
   }
 

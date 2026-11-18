@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ContactStatus } from './extensions.js';
+import { LiveCall, PresenceInfo } from './monitor.js';
 
 export const AmiStatus = z.object({
   connected: z.boolean(),
@@ -87,5 +88,8 @@ export const WsEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('registration'), data: RegistrationStatus }),
   z.object({ type: z.literal('ami'), data: AmiStatus }),
   z.object({ type: z.literal('raw'), data: z.record(z.string(), z.unknown()) }),
+  z.object({ type: z.literal('call'), data: LiveCall }),
+  z.object({ type: z.literal('call-removed'), data: z.object({ id: z.string() }) }),
+  z.object({ type: z.literal('presence'), data: PresenceInfo }),
 ]);
 export type WsEvent = z.infer<typeof WsEvent>;

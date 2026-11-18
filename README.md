@@ -80,6 +80,29 @@ clase:
   también se aceptan MP3/OGG/M4A/FLAC. GSM, µ-law, A-law y SLN se guardan tal cual.
 - La previsualización en el navegador funciona para WAV, µ-law, A-law y SLN.
 
+### BLF / presencia
+
+pbx_realtime no soporta hints, así que por cada extensión con **BLF** activo el servicio escribe
+`exten => <ext>,hint,PJSIP/<ext>[,CustomPresence:<ext>]` en un bloque gestionado dentro de su contexto en
+`extensions.conf` (backend de archivo o AMI, igual que el editor) y ejecuta `dialplan reload`. Se regenera al crear,
+editar, eliminar o restaurar extensiones, y a mano con `POST /extensions/hints/sync`. Con `CustomPresence` se puede
+fijar la presencia (disponible, ausente, no molestar...) desde la lista de extensiones; se guarda en la astdb de
+Asterisk vía `PRESENCE_STATE`.
+
+### Monitor de llamadas y escucha en vivo
+
+El servicio reconstruye las llamadas activas a partir de eventos AMI (Newchannel, DialBegin/End, QueueCallerJoin,
+AgentConnect, Bridge, Hold, Hangup) agrupadas por `Linkedid`, y las publica por REST (`/monitor/calls`) y por el
+WebSocket de eventos. La página **Monitor** las muestra como tarjetas o tabla con origen/destino, número marcado,
+CallerID, hora y tiempos de timbrado, espera y conversación. Todos los roles pueden verla; administradores y
+operadores pueden colgar y escuchar.
+
+La escucha usa [app_audiofork](https://github.com/hosseinhunta/asterisk-audiofork): la API pide a Asterisk (acción AMI
+`AudioFork`) que envíe el audio del canal en SLIN 8 kHz a `PUBLIC_WS_URL/ws/audiofork/<sesión>` y lo reenvía a los
+navegadores conectados a `/ws/listen/<sesión>`, donde se reproduce con WebAudio. `PUBLIC_WS_URL` debe ser alcanzable
+desde el servidor Asterisk. La imagen Docker compila el módulo (con dos parches a la fuente publicada) a partir de
+`asterisk-dev`; en un Asterisk propio, compílalo contra su árbol de fuentes y cárgalo con `module load app_audiofork.so`.
+
 Eliminar una extensión/troncal borra sus filas `ps_*` (deja de autenticar de inmediato) y conserva la configuración en
 `vm_endpoint_meta.snapshot` para poder restaurarla.
 

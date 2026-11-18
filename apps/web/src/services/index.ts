@@ -9,3 +9,4 @@ export * from './logs';
 export * from './users';
 export * from './settings';
 export * from './moh';
+export * from './monitor';

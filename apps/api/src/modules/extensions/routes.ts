@@ -5,11 +5,32 @@ import {
 } from '@voip-manager/shared';
 import type { Env } from '../../config/env.js';
 import { ExtensionService } from './service.js';
+import { PresenceService } from '../../services/hints.service.js';
+import { HintsSyncResult, PresenceInfo, SetPresenceInput } from '@voip-manager/shared';
 
 export const extensionRoutes: FastifyPluginAsyncZod<{ env: Env }> = async (app) => {
   const svc = new ExtensionService(app);
+  const presence = new PresenceService(app);
   app.addHook('preHandler', app.authenticate);
   const tags = ['extensions'];
+
+  app.post('/hints/sync', { preHandler: [app.authorize('extensions:write')], schema: { tags, response: { 200: HintsSyncResult } } }, async (req) => {
+    const r = await svc.hints.sync(true);
+    await app.audit(req, { action: 'sync-hints', resource: 'extensions', resourceId: r.file, details: r.contexts });
+    return r;
+  });
+
+  app.get('/:id/presence', { preHandler: [app.authorize('extensions:read')], schema: { tags, params: IdParam, response: { 200: PresenceInfo } } }, async (req) => {
+    await svc.get(req.params.id);
+    return presence.get(req.params.id);
+  });
+
+  app.put('/:id/presence', { preHandler: [app.authorize('extensions:write')], schema: { tags, params: IdParam, body: SetPresenceInput, response: { 200: PresenceInfo } } }, async (req) => {
+    await svc.get(req.params.id);
+    const r = await presence.set(req.params.id, req.body);
+    await app.audit(req, { action: 'set-presence', resource: 'extensions', resourceId: req.params.id, details: req.body });
+    return r;
+  });
 
   app.get(
     '/',

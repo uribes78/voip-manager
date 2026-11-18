@@ -35,6 +35,9 @@ Listas paginadas: `Paginated<T> { items, total, page, pageSize }`, query `Pagina
 | POST | `/extensions/:id/clone` | `ExtensionCloneInput` | `Extension` (201) |
 | POST | `/extensions/:id/restore` | — | `Extension` (recrea desde snapshot) |
 | GET | `/extensions/:id/status` | — | `EndpointStatus` |
+| GET | `/extensions/:id/presence` | — | `PresenceInfo` (PRESENCE_STATE de CustomPresence:<id>) |
+| PUT | `/extensions/:id/presence` | `SetPresenceInput` | `PresenceInfo` |
+| POST | `/extensions/hints/sync` | — | `HintsSyncResult` (regenera los hints BLF en extensions.conf) |
 
 Escritura: cada alta/cambio/baja aplica `PJSIPNotify`/reload de PJSIP vía AMI cuando aplica (realtime lo hace
 innecesario para endpoints, pero se dispara `module reload res_pjsip.so` tras cambios de transporte).
@@ -108,6 +111,18 @@ luego `endpoint`, `registration` y `ami` conforme cambian.
 | POST | `/moh/:name/files` | multipart `files[]` | `MohUploadResult` (convierte a WAV 8 kHz mono) |
 | DELETE | `/moh/:name/files/:file` | — | `OkResponse` |
 | GET | `/moh/:name/files/:file/preview?token=` | — | `audio/wav` para `<audio>` |
+
+## Monitor de llamadas (`/monitor`) — `monitor:read` (todos los roles) / `monitor:execute` (admin, operator)
+| GET | `/monitor/calls` | — | `MonitorSnapshot` (llamadas activas por Linkedid con tiempos ring/wait/talk) |
+| GET | `/monitor/capabilities` | — | `MonitorCapabilities` (app_audiofork cargado, URL pública) |
+| POST | `/monitor/calls/:id/hangup` | `HangupInput` | `{ ok, channels }` |
+| POST | `/monitor/calls/:id/listen` | `ListenStartInput` | `ListenSession` (inicia AudioFork en el canal) |
+| GET | `/monitor/listen` | — | `ListenSession[]` |
+| DELETE | `/monitor/listen/:sessionId` | — | `OkResponse` |
+
+WebSocket: `/ws/events` ahora también emite `call`, `call-removed` y `presence`. `/ws/listen/:sessionId?token=` entrega
+un JSON de metadatos y luego frames binarios SLIN 16 bits 8 kHz (320 bytes = 20 ms). `/ws/audiofork/:sessionId` es el
+endpoint al que Asterisk envía el audio.
 
 ## Salud
 | GET | `/health` | — | `{ status: 'ok'|'degraded', db, ami, schema: { config, cdr }, uptime, version }` |

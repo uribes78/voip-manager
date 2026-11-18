@@ -44,6 +44,7 @@ export const amiRoutes: FastifyPluginAsyncZod<{ env: Env }> = async (app) => {
     const rows = await app.db.select({ id: vmEndpointMeta.endpointId, type: vmEndpointMeta.type }).from(vmEndpointMeta).where(isNull(vmEndpointMeta.deletedAt));
     const map = new Map(rows.map((r) => [r.id, r.type]));
     app.ami.cache.setTypeResolver((id) => map.get(id) ?? 'unknown');
+    app.ami.calls.setTypeResolver((id) => map.get(id) ?? 'unknown');
   };
   app.addHook('onReady', async () => {
     await refreshTypes().catch((e) => app.log.warn({ err: e }, 'No se pudieron cargar tipos de endpoint'));

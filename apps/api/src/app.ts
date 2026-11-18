@@ -16,6 +16,7 @@ import dbPlugin from './plugins/db.js';
 import amiPlugin from './plugins/ami.js';
 import authPlugin from './plugins/auth.js';
 import auditPlugin from './plugins/audit.js';
+import listenPlugin from './plugins/listen.js';
 import ipAllowlist from './plugins/ip-allowlist.js';
 import errorHandler from './plugins/error-handler.js';
 import { registerRoutes } from './modules/index.js';
@@ -68,7 +69,9 @@ export async function buildApp({ env, amiAutoStart = true }: BuildOptions): Prom
   await app.register(amiPlugin, { env, autoStart: amiAutoStart });
   await app.register(authPlugin, { secret: env.JWT_SECRET, accessTtl: env.JWT_ACCESS_TTL });
   await app.register(auditPlugin);
-  await app.register(websocket);
+  await app.register(listenPlugin);
+  // handleProtocols: app_audiofork pide un subprotocolo (audio/raw); hay que aceptarlo o el handshake falla.
+  await app.register(websocket, { options: { handleProtocols: (protocols: Set<string>) => protocols.values().next().value ?? false } });
   await app.register(multipart, { limits: { fileSize: 64 * 1024 * 1024, files: 25 } });
 
   await app.register(swagger, {

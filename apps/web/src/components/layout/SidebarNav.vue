@@ -8,6 +8,7 @@ import {
   LayoutDashboardIcon,
   ListOrderedIcon,
   MusicIcon,
+  RadioIcon,
   PhoneCallIcon,
   PhoneForwardedIcon,
   SettingsIcon,
@@ -33,6 +34,7 @@ const route = useRoute();
 
 const items: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboardIcon, permission: 'ami:read', match: '/' },
+  { to: '/monitor', label: 'Monitor', icon: RadioIcon, permission: 'monitor:read' },
   { to: '/extensions', label: 'Extensiones', icon: PhoneCallIcon, permission: 'extensions:read' },
   { to: '/trunks', label: 'Troncales', icon: PhoneForwardedIcon, permission: 'trunks:read' },
   { to: '/queues', label: 'Colas', icon: UsersRoundIcon, permission: 'queues:read' },

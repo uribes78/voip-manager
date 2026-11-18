@@ -72,6 +72,8 @@ const EnvSchema = z.object({
         .filter((m) => m.remote.startsWith('/')),
     ),
   FFMPEG_PATH: z.string().optional(),
+  /** URL base (ws://host:puerto) con la que Asterisk alcanza a este servicio para enviar audio (app_audiofork). */
+  PUBLIC_WS_URL: z.string().url().optional(),
 
   DEFAULT_CONTEXT: z.string().default('from-internal'),
   DEFAULT_TRANSPORT: z.string().default('transport-udp'),

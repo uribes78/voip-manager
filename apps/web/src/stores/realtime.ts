@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import type { AmiStatus, DashboardSnapshot, EndpointStatus, RegistrationStatus, WsEvent } from '@voip-manager/shared';
+import type { AmiStatus, DashboardSnapshot, EndpointStatus, LiveCall, PresenceInfo, RegistrationStatus, WsEvent } from '@voip-manager/shared';
 
 export type WsState = 'disconnected' | 'connecting' | 'connected';
 
@@ -11,11 +11,15 @@ export const useRealtimeStore = defineStore('realtime', () => {
   const registrations = ref<Record<string, RegistrationStatus>>({});
   const kpi = ref<DashboardSnapshot['kpi'] | null>(null);
   const lastEventAt = ref<string | null>(null);
+  const calls = ref<Record<string, LiveCall>>({});
+  const presence = ref<Record<string, PresenceInfo>>({});
 
   const endpointList = computed(() =>
     Object.values(endpoints.value).sort((a, b) => a.endpoint.localeCompare(b.endpoint, undefined, { numeric: true })),
   );
   const registrationList = computed(() => Object.values(registrations.value));
+  const callList = computed(() => Object.values(calls.value).sort((a, b) => a.startedAt.localeCompare(b.startedAt)));
+  const activeCalls = computed(() => callList.value.filter((c) => c.state !== 'ended').length);
   const onlineExtensions = computed(
     () => endpointList.value.filter((e) => e.type === 'extension' && e.online).length,
   );
@@ -52,9 +56,24 @@ export const useRealtimeStore = defineStore('realtime', () => {
       case 'ami':
         ami.value = event.data;
         break;
+      case 'call':
+        calls.value = { ...calls.value, [event.data.id]: event.data };
+        break;
+      case 'call-removed': {
+        const { [event.data.id]: _removed, ...rest } = calls.value;
+        calls.value = rest;
+        break;
+      }
+      case 'presence':
+        presence.value = { ...presence.value, [event.data.endpoint]: event.data };
+        break;
       case 'raw':
         break;
     }
+  }
+
+  function setCalls(list: LiveCall[]) {
+    calls.value = Object.fromEntries(list.map((c) => [c.id, c]));
   }
 
   function endpointStatus(id: string): EndpointStatus | undefined {
@@ -70,6 +89,11 @@ export const useRealtimeStore = defineStore('realtime', () => {
     lastEventAt,
     endpointList,
     registrationList,
+    calls,
+    callList,
+    activeCalls,
+    presence,
+    setCalls,
     onlineExtensions,
     applySnapshot,
     applyEvent,

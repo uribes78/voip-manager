@@ -6,6 +6,7 @@ import type {
 } from '@voip-manager/shared';
 import type { Env } from '../config/env.js';
 import { StatusCache } from './status-cache.js';
+import { CallTracker } from './call-tracker.js';
 import { asteriskUnavailable } from './errors.js';
 
 type Manager = ReturnType<typeof AsteriskManager>;
@@ -66,6 +67,7 @@ const rttMs = (usec: string | undefined): number | null => {
  */
 export class AmiService extends EventEmitter {
   readonly cache = new StatusCache();
+  readonly calls = new CallTracker();
   private ami: Manager | null = null;
   private status: AmiStatus;
   private refreshTimer: NodeJS.Timeout | null = null;
@@ -117,6 +119,7 @@ export class AmiService extends EventEmitter {
       this.status.connected = false;
       this.status.connectedSince = null;
       this.cache.resetChannels();
+      this.calls.clear();
       this.emitStatus();
     };
     ami.on('close', () => onDown('close'));
@@ -181,6 +184,11 @@ export class AmiService extends EventEmitter {
       case 'hangup':
         if (evt.uniqueid) this.cache.channelDown(evt.uniqueid);
         break;
+      case 'presencestatechange': {
+        const m = /^CustomPresence:(.+)$/.exec(evt.presentity ?? '');
+        if (m?.[1]) this.emit('presence', { endpoint: m[1], state: (evt.status ?? 'not_set').toLowerCase(), subtype: evt.subtype || null, message: evt.message || null });
+        break;
+      }
       case 'fullybooted':
       case 'reload':
         this.scheduleRefresh();
@@ -188,6 +196,7 @@ export class AmiService extends EventEmitter {
       default:
         break;
     }
+    this.calls.handle(evt);
     this.emit('event', evt);
   }
 
@@ -438,6 +447,7 @@ export class AmiService extends EventEmitter {
   async refreshChannels() {
     const events = await this.actionList({ action: 'CoreShowChannels' });
     this.cache.resetChannels();
+    this.calls.seed(events);
     for (const e of events) {
       if ((e.event ?? '').toLowerCase() !== 'coreshowchannel' || !e.uniqueid || !e.channel) continue;
       this.cache.channelUp(e.uniqueid, e.channel);

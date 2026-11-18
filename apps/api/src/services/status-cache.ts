@@ -78,7 +78,7 @@ export class StatusCache extends EventEmitter {
   }
 
   channelUp(uniqueid: string, channel: string) {
-    const m = /^PJSIP\/([^-]+)-/.exec(channel);
+    const m = /^PJSIP\/(.+)-[0-9a-f]{8}$/i.exec(channel);
     const endpoint = m?.[1] ?? null;
     this.channels.set(uniqueid, { endpoint, since: Date.now() });
     if (endpoint) {

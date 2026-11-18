@@ -39,6 +39,12 @@ export const ExtensionBase = z.object({
   language: z.string().trim().max(10).optional(),
   callGroup: z.string().trim().max(40).optional(),
   pickupGroup: z.string().trim().max(40).optional(),
+  /** Publica un hint (exten => <id>,hint,PJSIP/<id>) para BLF en los teléfonos. */
+  blf: z.boolean().default(true),
+  /** El hint incluye CustomPresence:<id> para poder fijar presencia (disponible, ausente, no molestar...). */
+  presence: z.boolean().default(true),
+  /** Contexto donde los teléfonos buscan los hints; por defecto el contexto de la extensión. */
+  subscribeContext: z.string().trim().max(40).optional(),
   advanced: EndpointAdvanced.default({ endpoint: {}, aor: {}, auth: {} }),
 });
 
@@ -81,6 +87,8 @@ export const Extension = ExtensionBase.extend({
   online: z.boolean().optional(),
   deviceState: z.string().optional(),
   contacts: z.array(ContactStatus).optional(),
+  hint: z.string().nullable().optional().describe('Línea de hint generada en extensions.conf'),
+  presenceState: z.string().optional().describe('Estado de presencia actual (CustomPresence)'),
 });
 export type Extension = z.infer<typeof Extension>;
 

@@ -2,6 +2,7 @@ import type { Extension, ExtensionCreateInput, ExtensionSummary, EndpointStatus 
 import type { EndpointMetaRow } from '../../db/schema/app/index.js';
 import type { PjsipRows } from '../pjsip/store.js';
 import { yn } from '../pjsip/store.js';
+import { hintLine } from '../../services/hints.service.js';
 
 /** Convierte la forma amigable en filas ps_endpoints / ps_aors / ps_auths. */
 export function extensionToRows(x: ExtensionCreateInput): PjsipRows {
@@ -23,6 +24,8 @@ export function extensionToRows(x: ExtensionCreateInput): PjsipRows {
     call_group: x.callGroup,
     pickup_group: x.pickupGroup,
     device_state_busy_at: '1',
+    allow_subscribe: yn(x.blf),
+    subscribe_context: x.subscribeContext,
     ...(x.webrtc ? { webrtc: 'yes', ice_support: 'yes', media_encryption: 'dtls', dtls_auto_generate_cert: 'yes' } : {}),
     ...x.advanced.endpoint,
   };
@@ -55,6 +58,7 @@ export function metaToExtension(meta: EndpointMetaRow, status?: EndpointStatus):
     online: status?.online ?? false,
     deviceState: status?.deviceState ?? 'Unknown',
     contacts: status?.contacts ?? [],
+    hint: hintLine({ ...cfg, id: meta.endpointId, context: meta.context }),
   };
 }
 

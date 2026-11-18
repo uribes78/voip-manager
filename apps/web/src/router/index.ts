@@ -33,6 +33,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'queues/:name', name: 'queue-detail', component: () => import('@/pages/queues/QueueDetailPage.vue'), props: true, meta: { permission: 'queues:read', title: 'Detalle de cola' } },
       { path: 'queues/:name/edit', name: 'queue-edit', component: () => import('@/pages/queues/QueueFormPage.vue'), props: true, meta: { permission: 'queues:write', title: 'Editar cola' } },
       { path: 'dialplan', name: 'dialplan', component: () => import('@/pages/dialplan/DialplanPage.vue'), meta: { permission: 'dialplan:read', title: 'Plan de marcado' } },
+      { path: 'monitor', name: 'monitor', component: () => import('@/pages/monitor/MonitorPage.vue'), meta: { permission: 'monitor:read', title: 'Monitor de llamadas' } },
       { path: 'moh', name: 'moh', component: () => import('@/pages/moh/MohPage.vue'), meta: { permission: 'moh:read', title: 'Música en espera' } },
       { path: 'cdr', name: 'cdr', component: () => import('@/pages/CdrPage.vue'), meta: { permission: 'cdr:read', title: 'CDR' } },
       { path: 'logs', name: 'logs', component: () => import('@/pages/LogsPage.vue'), meta: { permission: 'logs:read', title: 'Logs' } },

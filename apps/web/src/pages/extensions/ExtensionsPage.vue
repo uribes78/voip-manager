@@ -3,15 +3,19 @@ import { computed, reactive, ref, watch } from 'vue';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { refDebounced } from '@vueuse/core';
 import { toast } from 'vue-sonner';
-import { CopyIcon, MoreHorizontalIcon, PencilIcon, PhoneOutgoingIcon, PlusIcon, RotateCcwIcon, SearchIcon, Trash2Icon } from '@lucide/vue';
-import type { ExtensionSummary } from '@voip-manager/shared';
+import { CopyIcon, MoreHorizontalIcon, PencilIcon, PhoneOutgoingIcon, PlusIcon, RotateCcwIcon, SearchIcon, Trash2Icon, UserRoundCheckIcon } from '@lucide/vue';
+import type { ExtensionSummary, PresenceStateValue } from '@voip-manager/shared';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import PresenceBadge from '@/components/common/PresenceBadge.vue';
+import { PRESENCE_OPTIONS } from '@/lib/presence';
 import PageHeader from '@/components/common/PageHeader.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -60,6 +64,14 @@ function invalidate() {
 const target = ref<ExtensionSummary | null>(null);
 const deleteOpen = ref(false);
 const cloneOpen = ref(false);
+const setPresence = useMutation({
+  mutationFn: ({ id, state }: { id: string; state: PresenceStateValue }) => extensionsService.setPresence(id, { state }),
+  onSuccess: (p) => {
+    realtime.presence = { ...realtime.presence, [p.endpoint]: p };
+    toast.success(`Presencia de ${p.endpoint}: ${PRESENCE_OPTIONS.find((o) => o.value === p.state)?.label ?? p.state}`);
+  },
+  onError: (e) => toast.error('No se pudo cambiar la presencia', { description: errorMessage(e) }),
+});
 const originateOpen = ref(false);
 
 const remove = useMutation({
@@ -153,6 +165,7 @@ function openDialog(row: ExtensionSummary, which: 'delete' | 'clone' | 'originat
           <TableCell>
             <StatusBadge v-if="row.deletedAt" deleted />
             <StatusBadge v-else v-bind="liveStatus(row)" />
+            <PresenceBadge v-if="!row.deletedAt && realtime.presence[row.id]" :state="realtime.presence[row.id]!.state" :message="realtime.presence[row.id]!.message" class="ml-1" />
           </TableCell>
           <TableCell class="hidden text-xs text-muted-foreground lg:table-cell">{{ formatDateTime(row.updatedAt) }}</TableCell>
           <TableCell>
@@ -168,6 +181,14 @@ function openDialog(row: ExtensionSummary, which: 'delete' | 'clone' | 'originat
                   <DropdownMenuItem as-child><RouterLink :to="`/extensions/${row.id}/edit`"><PencilIcon /> {{ canWrite ? 'Editar' : 'Ver' }}</RouterLink></DropdownMenuItem>
                   <DropdownMenuItem v-if="canWrite" @select="openDialog(row, 'clone')"><CopyIcon /> Clonar</DropdownMenuItem>
                   <DropdownMenuItem v-if="canOriginate" @select="openDialog(row, 'originate')"><PhoneOutgoingIcon /> Probar llamada</DropdownMenuItem>
+                  <DropdownMenuSub v-if="canWrite && !row.deletedAt">
+                    <DropdownMenuSubTrigger><UserRoundCheckIcon /> Presencia</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem v-for="p in PRESENCE_OPTIONS" :key="p.value" @select="setPresence.mutate({ id: row.id, state: p.value })">
+                        <span class="size-2 rounded-full" :class="p.dot" /> {{ p.label }}
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                   <template v-if="canWrite">
                     <DropdownMenuSeparator />
                     <DropdownMenuItem variant="destructive" @select="openDialog(row, 'delete')"><Trash2Icon /> Eliminar</DropdownMenuItem>

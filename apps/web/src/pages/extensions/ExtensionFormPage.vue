@@ -53,6 +53,8 @@ const defaults: ExtensionCreateForm = {
   directMedia: false,
   nat: true,
   webrtc: false,
+  blf: true,
+  presence: true,
   advanced: { endpoint: {}, aor: {}, auth: {} },
 };
 
@@ -183,11 +185,14 @@ const dtmfOptions = DTMF_MODES.map((m) => ({ value: m, label: m }));
               <FormSwitch name="nat" label="Detrás de NAT" hint="Activa rtp_symmetric, force_rport y rewrite_contact." :disabled="readOnly" />
               <FormSwitch name="directMedia" label="Direct media" hint="Permite RTP directo entre teléfonos (direct_media)." :disabled="readOnly" />
               <FormSwitch name="webrtc" label="WebRTC" hint="Configura DTLS/ICE/AVPF para clientes web." :disabled="readOnly" />
+              <FormSwitch name="blf" label="BLF (hint)" hint="Publica exten => ext,hint,PJSIP/ext en extensions.conf para que los teléfonos vean el estado." :disabled="readOnly" />
+              <FormSwitch name="presence" label="Presencia" hint="El hint incluye CustomPresence para fijar disponible, ausente o no molestar desde la lista." :disabled="readOnly" />
             </div>
             <FormText name="mailbox" label="Buzón de voz" placeholder="1001@default" mono :disabled="readOnly" />
             <div />
             <FormText name="callGroup" label="Call group" placeholder="1" :disabled="readOnly" />
             <FormText name="pickupGroup" label="Pickup group" placeholder="1" :disabled="readOnly" />
+            <FormText name="subscribeContext" label="Contexto de suscripción" placeholder="(igual al contexto)" hint="Donde los teléfonos buscan los hints (subscribe_context)." :disabled="readOnly" />
           </CardContent>
         </Card>
       </TabsContent>

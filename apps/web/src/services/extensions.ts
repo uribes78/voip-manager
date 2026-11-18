@@ -1,4 +1,5 @@
 import type {
+  HintsSyncResult, PresenceInfo, SetPresenceInput,
   EndpointStatus,
   Extension,
   ExtensionCloneInput,
@@ -21,4 +22,7 @@ export const extensionsService = {
     api.post<Extension>(`/extensions/${encodeURIComponent(id)}/clone`, input),
   restore: (id: string) => api.post<Extension>(`/extensions/${encodeURIComponent(id)}/restore`),
   status: (id: string) => api.get<EndpointStatus>(`/extensions/${encodeURIComponent(id)}/status`),
+  presence: (id: string) => api.get<PresenceInfo>(`/extensions/${encodeURIComponent(id)}/presence`),
+  setPresence: (id: string, input: SetPresenceInput) => api.put<PresenceInfo>(`/extensions/${encodeURIComponent(id)}/presence`, input),
+  syncHints: () => api.post<HintsSyncResult>('/extensions/hints/sync'),
 };

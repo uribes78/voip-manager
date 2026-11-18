@@ -8,14 +8,7 @@ import type { Env } from '../../config/env.js';
 import { badRequest, unauthorized } from '../../services/errors.js';
 import { MohService } from './service.js';
 
-declare module 'fastify' {
-  interface FastifyInstance {
-    env: Env;
-  }
-}
-
-export const mohRoutes: FastifyPluginAsyncZod<{ env: Env }> = async (app, { env }) => {
-  if (!app.hasDecorator('env')) app.decorate('env', env);
+export const mohRoutes: FastifyPluginAsyncZod<{ env: Env }> = async (app) => {
   const svc = new MohService(app);
   const tags = ['moh'];
   const read = [app.authenticate, app.authorize('moh:read')];

@@ -20,16 +20,39 @@ export const eventsWebSocket: FastifyPluginAsync = async (app) => {
   app.ami.cache.on('endpoint', (data) => broadcast({ type: 'endpoint', data }));
   app.ami.cache.on('registration', (data) => broadcast({ type: 'registration', data }));
   app.ami.on('status', (data) => broadcast({ type: 'ami', data }));
+  app.ami.on('presence', (data) => broadcast({ type: 'presence', data }));
+  app.ami.calls.on('call', (data) => broadcast({ type: 'call', data }));
+  app.ami.calls.on('call-removed', (data) => broadcast({ type: 'call-removed', data }));
   app.ami.on('snapshot', () => {
     if (!clients.size) return;
     void buildSnapshot(app as never).then((data) => broadcast({ type: 'snapshot', data })).catch(() => undefined);
+  });
+
+  // Audio desde Asterisk (app_audiofork). No lleva token: la sesión es un UUID efímero creado por la API.
+  app.get('/audiofork/:sessionId', { websocket: true }, (socket, req) => {
+    const { sessionId } = req.params as { sessionId: string };
+    if (!app.liveListen.attachSource(sessionId, socket)) socket.close(4404, 'Sesión desconocida');
+  });
+
+  // Oyentes (navegador). Requiere monitor:execute.
+  app.get('/listen/:sessionId', { websocket: true }, (socket, req) => {
+    const { sessionId } = req.params as { sessionId: string };
+    const token = (req.query as { token?: string }).token;
+    try {
+      const user = app.verifyAccessToken(token ?? '');
+      if (!hasPermission(user.role, 'monitor:execute')) throw new Error('forbidden');
+    } catch {
+      socket.close(4401, 'No autorizado');
+      return;
+    }
+    if (!app.liveListen.attachListener(sessionId, socket)) socket.close(4404, 'Sesión desconocida');
   });
 
   app.get('/events', { websocket: true }, async (socket, req) => {
     const token = (req.query as { token?: string }).token;
     try {
       const user = app.verifyAccessToken(token ?? '');
-      if (!hasPermission(user.role, 'ami:read')) throw new Error('forbidden');
+      if (!hasPermission(user.role, 'ami:read') && !hasPermission(user.role, 'monitor:read')) throw new Error('forbidden');
     } catch {
       socket.close(4401, 'No autorizado');
       return;

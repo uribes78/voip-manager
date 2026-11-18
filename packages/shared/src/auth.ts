@@ -14,6 +14,7 @@ export const Resource = z.enum([
   'logs',
   'settings',
   'moh',
+  'monitor',
 ]);
 export type Resource = z.infer<typeof Resource>;
 
@@ -37,6 +38,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'ami:read',
     'ami:execute',
     'settings:read',
+    'monitor:read',
+    'monitor:execute',
   ],
   viewer: all(['read']).filter((p) => p !== 'users:read'),
 };

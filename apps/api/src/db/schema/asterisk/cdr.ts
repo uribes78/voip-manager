@@ -1,0 +1,25 @@
+import { mysqlTable, varchar, int, datetime } from 'drizzle-orm/mysql-core';
+
+export const cdr = mysqlTable('cdr', {
+  accountcode: varchar('accountcode', { length: 20 }),
+  src: varchar('src', { length: 80 }),
+  dst: varchar('dst', { length: 80 }),
+  dcontext: varchar('dcontext', { length: 80 }),
+  clid: varchar('clid', { length: 80 }),
+  channel: varchar('channel', { length: 80 }),
+  dstchannel: varchar('dstchannel', { length: 80 }),
+  lastapp: varchar('lastapp', { length: 80 }),
+  lastdata: varchar('lastdata', { length: 80 }),
+  start: datetime('start', { mode: 'date' }),
+  answer: datetime('answer', { mode: 'date' }),
+  end: datetime('end', { mode: 'date' }),
+  duration: int('duration'),
+  billsec: int('billsec'),
+  disposition: varchar('disposition', { length: 45 }),
+  amaflags: varchar('amaflags', { length: 45 }),
+  userfield: varchar('userfield', { length: 256 }),
+  uniqueid: varchar('uniqueid', { length: 150 }),
+  linkedid: varchar('linkedid', { length: 150 }),
+  peeraccount: varchar('peeraccount', { length: 20 }),
+  sequence: int('sequence'),
+});

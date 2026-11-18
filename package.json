@@ -1,0 +1,35 @@
+{
+  "name": "voip-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Administrador de Asterisk 18+ mediante esquema Realtime (PJSIP, colas, troncales, dialplan, CDR, AMI)",
+  "author": "Saul Uribe <suribe@calzzapato.com>",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n shared,api,web -c blue,green,magenta \"npm:dev:shared\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:shared": "npm run dev -w @voip-manager/shared",
+    "dev:api": "npm run dev -w @voip-manager/api",
+    "dev:web": "npm run dev -w @voip-manager/web",
+    "build": "npm run build -w @voip-manager/shared && npm run build -w @voip-manager/api && npm run build -w @voip-manager/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:generate": "npm run db:generate -w @voip-manager/api",
+    "db:migrate": "npm run db:migrate -w @voip-manager/api",
+    "db:seed": "npm run db:seed -w @voip-manager/api",
+    "asterisk:schema": "bash scripts/install-asterisk-schema.sh",
+    "compose:up": "docker compose up -d",
+    "compose:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7",
+    "typescript": "^5.9.3"
+  }
+}

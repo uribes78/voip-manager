@@ -1,0 +1,72 @@
+# Entorno de desarrollo: MariaDB + Asterisk 20 (Ubuntu 24.04) con realtime por ODBC.
+# 1) docker compose up -d mariadb
+# 2) docker compose run --rm asterisk-schema       # Alembic de Asterisk (ps_*, queues, extensions, cdr)
+# 3) npm run db:migrate && npm run db:seed          # tablas vm_* y usuario admin
+# 4) docker compose up -d asterisk
+services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: voip-mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: asterisk
+      MARIADB_USER: asterisk
+      MARIADB_PASSWORD: asterisk
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    ports:
+      - '${DB_HOST_PORT:-3307}:3306'   # 3306 del host suele estar ocupado
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./docker/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Instala/actualiza el esquema realtime oficial de Asterisk con Alembic (contrib/ast-db-manage).
+  asterisk-schema:
+    build:
+      context: ./docker/alembic
+      args:
+        ASTERISK_BRANCH: '20'
+    container_name: voip-asterisk-schema
+    profiles: ['tools']
+    environment:
+      DB_URL: mysql+pymysql://asterisk:asterisk@mariadb:3306/asterisk
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  asterisk:
+    build:
+      context: ./docker/asterisk
+    container_name: voip-asterisk
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: '3306'
+      DB_NAME: asterisk
+      DB_USER: asterisk
+      DB_PASSWORD: asterisk
+      AMI_USER: voipmanager
+      AMI_SECRET: voipmanager
+    ports:
+      - '5038:5038'         # AMI
+      - '5060:5060/udp'     # SIP UDP
+      - '5060:5060/tcp'     # SIP TCP
+      - '8089:8089'         # WSS (WebRTC)
+      - '10000-10100:10000-10100/udp'  # RTP (rango reducido para desarrollo)
+    volumes:
+      - ./docker/asterisk/conf:/etc/asterisk/custom:ro
+      - ./docker/asterisk/log:/var/log/asterisk
+    healthcheck:
+      test: ['CMD', 'asterisk', '-rx', 'core show version']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mariadb-data:

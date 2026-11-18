@@ -1,4 +1,4 @@
-import type { Trunk, TrunkCreateInput, EndpointStatus, RegistrationStatus } from '@voip-manager/shared';
+import { TrunkBase, type Trunk, type TrunkCreateInput, type EndpointStatus, type RegistrationStatus } from '@voip-manager/shared';
 import type { EndpointMetaRow } from '../../db/schema/app/index.js';
 import type { PjsipRows } from '../pjsip/store.js';
 import { yn } from '../pjsip/store.js';
@@ -68,7 +68,10 @@ export function trunkToRows(t: TrunkCreateInput): PjsipRows {
 }
 
 export function metaToTrunk(meta: EndpointMetaRow, status?: EndpointStatus, reg?: RegistrationStatus): Trunk {
-  const cfg = (meta.deletedAt ? (meta.snapshot ?? meta.config) : meta.config) as unknown as TrunkCreateInput;
+  const raw = (meta.deletedAt ? (meta.snapshot ?? meta.config) : meta.config) as Record<string, unknown>;
+  // Normaliza configs guardadas con versiones anteriores del esquema (aplica defaults de campos nuevos).
+  const parsed = TrunkBase.safeParse({ ...raw, id: meta.endpointId });
+  const cfg = (parsed.success ? parsed.data : { ...raw, id: meta.endpointId }) as TrunkCreateInput;
   const registering = cfg.mode === 'credentials' && cfg.register;
   return {
     ...cfg,

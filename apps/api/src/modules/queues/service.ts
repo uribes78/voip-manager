@@ -80,7 +80,8 @@ export class QueueService {
     const [row] = await this.app.db.select().from(queues).where(eq(queues.name, name));
     if (!row) throw notFound(`Cola ${name}`);
     const [meta] = await this.app.db.select().from(vmQueueMeta).where(eq(vmQueueMeta.queueName, name));
-    const cfg = (meta?.config ?? this.rowToConfig(row)) as unknown as QueueCreateInput;
+    const stored = meta?.config ? QueueCreateInput.safeParse({ ...meta.config, name }) : null;
+    const cfg = (stored?.success ? stored.data : this.rowToConfig(row)) as QueueCreateInput;
     const memberRows = await this.app.db.select().from(queueMembers).where(eq(queueMembers.queue_name, name)).orderBy(asc(queueMembers.penalty), asc(queueMembers.interface));
     const names = withMembers ? await this.extensionNames(memberRows.map((m) => /^PJSIP\/(.+)$/.exec(m.interface)?.[1] ?? '').filter(Boolean)) : new Map();
     return {

@@ -68,3 +68,21 @@ describe('trunkToRows', () => {
     expect(TrunkCreateInput.safeParse({ id: 'x', mode: 'credentials', host: 'h' }).success).toBe(false);
   });
 });
+
+describe('normalizeExtensionConfig', () => {
+  it('aplica defaults a configs guardadas con esquemas anteriores', async () => {
+    const { normalizeExtensionConfig } = await import('../modules/extensions/mapper.js');
+    const legacy = { id: '1001', displayName: 'Ana', secret: 'Secreto.1001', context: 'from-internal', codecs: ['ulaw'] };
+    const cfg = normalizeExtensionConfig(legacy, '1001');
+    expect(cfg.blf).toBe(true);
+    expect(cfg.presence).toBe(true);
+    expect(cfg.codecs).toEqual(['ulaw']);
+    expect(cfg.secret).toBe('Secreto.1001');
+  });
+  it('no rompe con una config inválida', async () => {
+    const { normalizeExtensionConfig } = await import('../modules/extensions/mapper.js');
+    const cfg = normalizeExtensionConfig({ displayName: 'X', secret: 'corta', codecs: ['nope'] }, '1002');
+    expect(cfg.id).toBe('1002');
+    expect(cfg.blf).toBe(true);
+  });
+});

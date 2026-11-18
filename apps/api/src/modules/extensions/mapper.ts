@@ -1,4 +1,4 @@
-import type { Extension, ExtensionCreateInput, ExtensionSummary, EndpointStatus } from '@voip-manager/shared';
+import { ExtensionCreateInput, type Extension, type ExtensionSummary, type EndpointStatus } from '@voip-manager/shared';
 import type { EndpointMetaRow } from '../../db/schema/app/index.js';
 import type { PjsipRows } from '../pjsip/store.js';
 import { yn } from '../pjsip/store.js';
@@ -45,8 +45,20 @@ export function extensionToRows(x: ExtensionCreateInput): PjsipRows {
   return { endpoint, aor, auth };
 }
 
+/**
+ * La config guardada en JSON puede ser de una versión anterior del esquema (sin campos nuevos como blf/presence).
+ * Se normaliza con el esquema para aplicar los defaults; si no valida, se completa a mano para no romper la lectura.
+ */
+export function normalizeExtensionConfig(raw: Record<string, unknown>, id: string): ExtensionCreateInput {
+  const parsed = ExtensionCreateInput.safeParse({ ...raw, id });
+  if (parsed.success) return parsed.data;
+  // Base válida con defaults y encima los valores guardados tal cual (aunque alguno no valide).
+  const base = ExtensionCreateInput.parse({ id, displayName: String(raw.displayName || id), secret: 'cambiar-secreto' });
+  return { ...base, ...(raw as Partial<ExtensionCreateInput>), id } as ExtensionCreateInput;
+}
+
 export function metaToExtension(meta: EndpointMetaRow, status?: EndpointStatus): Extension {
-  const cfg = (meta.deletedAt ? (meta.snapshot ?? meta.config) : meta.config) as unknown as ExtensionCreateInput;
+  const cfg = normalizeExtensionConfig((meta.deletedAt ? (meta.snapshot ?? meta.config) : meta.config) as Record<string, unknown>, meta.endpointId);
   return {
     ...cfg,
     id: meta.endpointId,

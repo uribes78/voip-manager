@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PaginationQuery, YesNo } from './common.js';
+import { PaginationQuery, YesNo, partialWithoutDefaults } from './common.js';
 import { QUEUE_COLUMNS, QUEUE_STRATEGIES } from './asterisk-columns.js';
 import { EndpointId } from './extensions.js';
 
@@ -44,7 +44,7 @@ export const QueueCreateInput = QueueBase;
 export type QueueCreateInput = z.infer<typeof QueueCreateInput>;
 export type QueueCreateForm = z.input<typeof QueueBase>;
 
-export const QueueUpdateInput = QueueBase.omit({ name: true }).partial();
+export const QueueUpdateInput = partialWithoutDefaults(QueueBase.omit({ name: true }));
 export type QueueUpdateInput = z.infer<typeof QueueUpdateInput>;
 
 export const QueueListQuery = PaginationQuery;
@@ -70,7 +70,7 @@ export const QueueMemberAddInput = z.object({
 });
 export type QueueMemberAddInput = z.infer<typeof QueueMemberAddInput>;
 
-export const QueueMemberUpdateInput = QueueMemberAddInput.omit({ extensionId: true }).partial();
+export const QueueMemberUpdateInput = partialWithoutDefaults(QueueMemberAddInput.omit({ extensionId: true }));
 export type QueueMemberUpdateInput = z.infer<typeof QueueMemberUpdateInput>;
 
 export const Queue = QueueBase.extend({

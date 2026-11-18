@@ -13,6 +13,7 @@ export const Resource = z.enum([
   'ami',
   'logs',
   'settings',
+  'moh',
 ]);
 export type Resource = z.infer<typeof Resource>;
 
@@ -28,7 +29,7 @@ const all = (actions: Action[]) =>
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   admin: all(['read', 'write', 'execute']),
   operator: [
-    ...(['extensions', 'trunks', 'queues', 'dialplan'] as Resource[]).flatMap(
+    ...(['extensions', 'trunks', 'queues', 'dialplan', 'moh'] as Resource[]).flatMap(
       (r) => [`${r}:read`, `${r}:write`] as Permission[],
     ),
     'cdr:read',

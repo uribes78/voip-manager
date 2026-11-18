@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { partialWithoutDefaults } from './common.js';
 
 export const ContextName = z
   .string()
@@ -19,7 +20,7 @@ export type DialplanLineInput = z.infer<typeof DialplanLineInput>;
 export const DialplanLine = DialplanLineInput.extend({ id: z.number().int() });
 export type DialplanLine = z.infer<typeof DialplanLine>;
 
-export const DialplanLineUpdateInput = DialplanLineInput.partial();
+export const DialplanLineUpdateInput = partialWithoutDefaults(DialplanLineInput);
 export type DialplanLineUpdateInput = z.infer<typeof DialplanLineUpdateInput>;
 
 export const DialplanContext = z.object({

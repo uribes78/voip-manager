@@ -8,3 +8,4 @@ export * from './ami';
 export * from './logs';
 export * from './users';
 export * from './settings';
+export * from './moh';

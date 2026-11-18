@@ -54,6 +54,24 @@ const EnvSchema = z.object({
   ASTERISK_LOG_PATH: pathFromEnv.default('/var/log/asterisk/full'),
   SERVICE_LOG_PATH: pathFromEnv.optional(),
   ASTERISK_ETC_PATH: pathFromEnv.optional(),
+  ASTERISK_MOH_PATH: pathFromEnv.optional(),
+  ASTERISK_DATA_REMOTE_PATH: z.string().default('/var/lib/asterisk'),
+  /** "ruta_en_asterisk=ruta_local,otra=otra" para directorios absolutos personalizados. */
+  ASTERISK_PATH_MAP: z
+    .string()
+    .default('')
+    .transform((s) =>
+      s
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .map((pair) => {
+          const [remote, local] = pair.split('=');
+          return { remote: (remote ?? '').trim(), local: resolve(envDir, (local ?? remote ?? '').trim()) };
+        })
+        .filter((m) => m.remote.startsWith('/')),
+    ),
+  FFMPEG_PATH: z.string().optional(),
 
   DEFAULT_CONTEXT: z.string().default('from-internal'),
   DEFAULT_TRANSPORT: z.string().default('transport-udp'),

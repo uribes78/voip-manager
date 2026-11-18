@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PaginationQuery, advancedRecord } from './common.js';
+import { PaginationQuery, advancedRecord, partialWithoutDefaults } from './common.js';
 import {
   CODECS, DTMF_MODES, PS_AOR_COLUMNS, PS_AUTH_COLUMNS, PS_ENDPOINT_COLUMNS,
 } from './asterisk-columns.js';
@@ -47,7 +47,7 @@ export type ExtensionCreateInput = z.infer<typeof ExtensionCreateInput>;
 /** Valores de entrada antes de aplicar defaults (lo que envía el formulario). */
 export type ExtensionCreateForm = z.input<typeof ExtensionCreateInput>;
 
-export const ExtensionUpdateInput = ExtensionBase.omit({ id: true }).partial();
+export const ExtensionUpdateInput = partialWithoutDefaults(ExtensionBase.omit({ id: true }));
 export type ExtensionUpdateInput = z.infer<typeof ExtensionUpdateInput>;
 
 export const ExtensionCloneInput = z.object({

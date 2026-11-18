@@ -62,6 +62,7 @@ services:
     volumes:
       - ./docker/asterisk/conf:/etc/asterisk/custom:ro
       - ./docker/asterisk/etc:/etc/asterisk      # editable desde la UI (ASTERISK_ETC_PATH)
+      - ./docker/asterisk/moh:/usr/share/asterisk/moh   # audios de música en espera (ASTERISK_MOH_PATH)
       - ./docker/asterisk/log:/var/log/asterisk
     healthcheck:
       test: ['CMD', 'asterisk', '-rx', 'core show version']

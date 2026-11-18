@@ -21,6 +21,13 @@ for f in /etc/asterisk/custom/*.conf; do
   fi
 done
 envsubst '${DB_HOST} ${DB_PORT} ${DB_NAME}' < /etc/asterisk/custom/odbc.ini > /etc/odbc.ini
+# Música en espera: /usr/share/asterisk/moh es un bind mount (docker/asterisk/moh); se siembra con los audios del paquete.
+if [ -z "$(ls -A /usr/share/asterisk/moh 2>/dev/null)" ]; then
+  echo ">> moh vacío: copiando audios por defecto del paquete"
+  cp -a /usr/share/asterisk/moh.dist/. /usr/share/asterisk/moh/
+fi
+chown -R asterisk:asterisk /usr/share/asterisk/moh 2>/dev/null || true
+chmod -R a+rX /usr/share/asterisk/moh 2>/dev/null || true
 mkdir -p /var/log/asterisk /var/run/asterisk
 chown -R asterisk:asterisk /var/log/asterisk /var/run/asterisk /var/lib/asterisk /var/spool/asterisk
 # /etc/asterisk es un bind mount: el chown puede no aplicar; basta con que sea legible (custom/ es de solo lectura).

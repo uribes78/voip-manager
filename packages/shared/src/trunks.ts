@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PaginationQuery, advancedRecord } from './common.js';
+import { PaginationQuery, advancedRecord, partialWithoutDefaults } from './common.js';
 import {
   CODECS, PS_AOR_COLUMNS, PS_AUTH_COLUMNS, PS_ENDPOINT_COLUMNS, PS_IDENTIFY_COLUMNS, PS_REGISTRATION_COLUMNS,
 } from './asterisk-columns.js';
@@ -56,7 +56,7 @@ export const TrunkCreateInput = TrunkBase.superRefine((t, ctx) => {
 export type TrunkCreateInput = z.infer<typeof TrunkCreateInput>;
 export type TrunkCreateForm = z.input<typeof TrunkBase>;
 
-export const TrunkUpdateInput = TrunkBase.omit({ id: true }).partial();
+export const TrunkUpdateInput = partialWithoutDefaults(TrunkBase.omit({ id: true }));
 export type TrunkUpdateInput = z.infer<typeof TrunkUpdateInput>;
 
 export const TrunkListQuery = PaginationQuery.extend({

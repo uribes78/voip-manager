@@ -66,6 +66,20 @@ con el comando de recarga correspondiente (`module reload features`, `module rel
 
 La pestaña **Códigos de función** resume lo definido en ambos archivos y las extensiones `Pickup`/`Park` del dialplan.
 
+### Música en espera
+
+Las clases viven en la tabla realtime `musiconhold` (+ `musiconhold_entry` para playlists); Asterisk las carga al
+primer uso o con `moh reload`. La página **Música en espera** las administra y sube audios al directorio de cada
+clase:
+
+- `directory` es relativo al `astdatadir` de Asterisk (`moh/<clase>` por defecto) o absoluto. Para que el servicio
+  pueda escribir ahí, el directorio debe estar mapeado: `ASTERISK_MOH_PATH` (ruta local de `<astdatadir>/moh`) o
+  `ASTERISK_PATH_MAP=/ruta/en/asterisk=/ruta/local,...` para carpetas personalizadas. Sin mapeo la clase se puede
+  definir, pero los audios hay que copiarlos por otro medio.
+- Los WAV se convierten a 8 kHz mono 16 bits (conversor propio). Con `ffmpeg` disponible (`FFMPEG_PATH` o en PATH)
+  también se aceptan MP3/OGG/M4A/FLAC. GSM, µ-law, A-law y SLN se guardan tal cual.
+- La previsualización en el navegador funciona para WAV, µ-law, A-law y SLN.
+
 Eliminar una extensión/troncal borra sus filas `ps_*` (deja de autenticar de inmediato) y conserva la configuración en
 `vm_endpoint_meta.snapshot` para poder restaurarla.
 

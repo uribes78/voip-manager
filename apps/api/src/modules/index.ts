@@ -11,6 +11,7 @@ import { cdrRoutes } from './cdr/routes.js';
 import { amiRoutes } from './ami/routes.js';
 import { logRoutes } from './logs/routes.js';
 import { settingsRoutes } from './settings/routes.js';
+import { mohRoutes } from './moh/routes.js';
 
 export const registerRoutes: FastifyPluginAsync<{ env: Env }> = async (app, { env }) => {
   await app.register(healthRoutes);
@@ -24,4 +25,5 @@ export const registerRoutes: FastifyPluginAsync<{ env: Env }> = async (app, { en
   await app.register(amiRoutes, { prefix: '/ami', env });
   await app.register(logRoutes, { prefix: '/logs', env });
   await app.register(settingsRoutes, { prefix: '/settings', env });
+  await app.register(mohRoutes, { prefix: '/moh', env });
 };

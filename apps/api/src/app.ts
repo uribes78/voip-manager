@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
+import multipart from '@fastify/multipart';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { existsSync } from 'node:fs';
@@ -68,6 +69,7 @@ export async function buildApp({ env, amiAutoStart = true }: BuildOptions): Prom
   await app.register(authPlugin, { secret: env.JWT_SECRET, accessTtl: env.JWT_ACCESS_TTL });
   await app.register(auditPlugin);
   await app.register(websocket);
+  await app.register(multipart, { limits: { fileSize: 64 * 1024 * 1024, files: 25 } });
 
   await app.register(swagger, {
     openapi: {
@@ -87,7 +89,8 @@ export async function buildApp({ env, amiAutoStart = true }: BuildOptions): Prom
   const webDist = env.WEB_DIST ?? resolve(process.cwd(), '../web/dist');
   const hasWeb = existsSync(webDist);
   if (hasWeb) {
-    await app.register(fastifyStatic, { root: webDist, prefix: '/', wildcard: false });
+    // wildcard: true sirve cualquier archivo del dist aunque se haya generado después de arrancar (builds nuevos).
+    await app.register(fastifyStatic, { root: webDist, prefix: '/', wildcard: true });
     app.log.info({ webDist }, 'Sirviendo frontend estático');
   }
   app.setNotFoundHandler((req, reply) => {

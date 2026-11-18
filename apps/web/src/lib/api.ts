@@ -86,7 +86,24 @@ export async function request<T>(method: string, path: string, opts: RequestOpti
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
+/** Envío multipart (FormData): el navegador fija el Content-Type con el boundary. */
+export async function upload<T>(path: string, form: FormData, retried = false): Promise<T> {
+  const auth = useAuthStore();
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (auth.accessToken) headers.Authorization = `Bearer ${auth.accessToken}`;
+  const res = await fetch(`${API_BASE}${path}`, { method: 'POST', headers, body: form });
+  if (res.status === 401 && !retried) {
+    const ok = await tryRefresh();
+    if (ok) return upload<T>(path, form, true);
+    auth.logoutLocal();
+    throw new ApiError(401, 'Sesión expirada. Inicia sesión de nuevo.');
+  }
+  if (!res.ok) throw await parseError(res);
+  return (await res.json()) as T;
+}
+
 export const api = {
+  upload,
   get: <T>(path: string, query?: Query, opts?: Omit<RequestOptions, 'query'>) =>
     request<T>('GET', path, { ...opts, query }),
   post: <T>(path: string, body?: unknown, opts?: Omit<RequestOptions, 'body'>) =>

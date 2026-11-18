@@ -9,5 +9,6 @@ coverage/
 docker/mariadb/data/
 docker/asterisk/log/
 docker/asterisk/etc/
+docker/asterisk/moh/
 .vite/
 *.tsbuildinfo

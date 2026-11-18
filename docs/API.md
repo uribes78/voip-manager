@@ -97,6 +97,18 @@ luego `endpoint`, `registration` y `ami` conforme cambian.
 
 `features.conf` y `res_parking.conf` no tienen soporte Realtime en Asterisk; por eso se editan como archivo.
 
+## Música en espera (`/moh`) — `moh:read` / `moh:write`
+| GET | `/moh` | — | `{ classes: MohClass[], environment: MohEnvironment }` (realtime + clases estáticas cargadas) |
+| POST | `/moh` | `MohClassCreateInput` | `MohClass` (201) |
+| POST | `/moh/reload` | — | `{ ok, response }` (`moh reload`) |
+| GET | `/moh/:name` | — | `MohClass` |
+| PATCH | `/moh/:name` | `MohClassUpdateInput` | `MohClass` |
+| DELETE | `/moh/:name?deleteFiles=` | — | `OkResponse` |
+| GET | `/moh/:name/files` | — | `MohFile[]` |
+| POST | `/moh/:name/files` | multipart `files[]` | `MohUploadResult` (convierte a WAV 8 kHz mono) |
+| DELETE | `/moh/:name/files/:file` | — | `OkResponse` |
+| GET | `/moh/:name/files/:file/preview?token=` | — | `audio/wav` para `<audio>` |
+
 ## Salud
 | GET | `/health` | — | `{ status: 'ok'|'degraded', db, ami, schema: { config, cdr }, uptime, version }` |
 

@@ -54,3 +54,19 @@ export const advancedRecord = (allowed: readonly string[]) =>
         });
       }
     });
+
+/**
+ * Versión "partial" de un objeto SIN aplicar defaults: en zod 4, `.partial()` conserva los `.default()`,
+ * así que un PATCH con un solo campo reiniciaría el resto a sus valores por defecto.
+ */
+type StripDefault<T> = T extends z.ZodDefault<infer U> ? U : T;
+export type PartialWithoutDefaults<T extends z.ZodRawShape> = z.ZodObject<{ [K in keyof T]: z.ZodOptional<StripDefault<T[K]>> }>;
+
+export function partialWithoutDefaults<T extends z.ZodRawShape>(schema: z.ZodObject<T>): PartialWithoutDefaults<T> {
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const [key, field] of Object.entries(schema.shape)) {
+    const inner = field instanceof z.ZodDefault ? field.removeDefault() : field;
+    shape[key] = (inner as z.ZodTypeAny).optional();
+  }
+  return z.object(shape) as unknown as PartialWithoutDefaults<T>;
+}

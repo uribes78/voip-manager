@@ -2,6 +2,8 @@
   "name": "@voip-manager/web",
   "version": "0.1.0",
   "private": true,
+  "author": "Saul Uribe <uribe.saul@yahoo.com.mx> (TICO)",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

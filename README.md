@@ -1,5 +1,7 @@
 # voip-manager
 
+Administrador web para Asterisk 18+ sobre esquema Realtime. Desarrollado por **TICO** (Saul Uribe).
+
 Servicio para administrar una instancia de **Asterisk 18+** mediante el esquema **Realtime** (ODBC → MariaDB):
 extensiones PJSIP, troncales, colas, plan de marcado, CDR, monitoreo por AMI y lectura de logs.
 PRD en `docs/PRD_Requirements.md`; contrato de la API en `docs/API.md`.
@@ -127,3 +129,9 @@ directamente con `alembic` desde `contrib/ast-db-manage` del código fuente de A
 | `viewer` | Solo lectura (sin usuarios) |
 
 El acceso a la API se limita además por `ALLOWED_IPS` (CIDR, `ip-range-check`).
+
+## Licencia
+
+© 2026 Saul Uribe (TICO). Distribuido bajo la licencia [Apache 2.0](LICENSE); ver también [NOTICE](NOTICE) para las
+atribuciones de terceros. `app_audiofork` (GPL v2) no se incluye en el repositorio: la imagen Docker lo descarga y
+compila al construirse.

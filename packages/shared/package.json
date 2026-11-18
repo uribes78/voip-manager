@@ -2,6 +2,8 @@
   "name": "@voip-manager/shared",
   "version": "0.1.0",
   "private": true,
+  "author": "Saul Uribe <uribe.saul@yahoo.com.mx> (TICO)",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +13,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",

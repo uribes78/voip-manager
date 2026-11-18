@@ -1,0 +1,13 @@
+voip-manager
+Copyright 2026 Saul Uribe (TICO)
+
+Desarrollado por TICO (Saul Uribe <uribe.saul@yahoo.com.mx>).
+
+Este producto se distribuye bajo la licencia Apache 2.0 (ver LICENSE).
+
+Componentes de terceros:
+- Los componentes de interfaz en apps/web/src/components/ui se generaron con shadcn-vue (MIT).
+- La imagen Docker de desarrollo descarga y compila app_audiofork
+  (https://github.com/hosseinhunta/asterisk-audiofork, GPL v2) para la escucha en vivo.
+  Su código no forma parte de este repositorio.
+- Asterisk (GPL v2) se administra a través de AMI y su esquema Realtime; no se redistribuye.

@@ -5,6 +5,14 @@
   "description": "Administrador de Asterisk 18+ mediante esquema Realtime (PJSIP, colas, troncales, dialplan, CDR, AMI)",
   "author": "Saul Uribe <uribe.saul@yahoo.com.mx> (TICO)",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uribes78/voip-manager.git"
+  },
+  "homepage": "https://github.com/uribes78/voip-manager#readme",
+  "bugs": {
+    "url": "https://github.com/uribes78/voip-manager/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=24"

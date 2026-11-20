@@ -1,0 +1,114 @@
+# voip-manager en un solo servidor (VM Proxmox/VMware): MariaDB + Asterisk + API/web + proxy HTTPS.
+# Uso: copiar esta carpeta a /opt/voip-manager, crear .env a partir de .env.production.example y ejecutar install.sh.
+#
+# Asterisk corre con network_mode: host para que SIP/RTP lleguen sin NAT de Docker; por eso la API y MariaDB se
+# publican solo en 127.0.0.1 y Asterisk los alcanza por localhost. El proxy (Caddy) es lo único expuesto hacia fuera.
+name: voip-manager
+
+services:
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Define DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME:-asterisk}
+      MARIADB_USER: ${DB_USER:-asterisk}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD}
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci', '--innodb-buffer-pool-size=256M']
+    ports:
+      - '127.0.0.1:3306:3306'   # Asterisk (red del host) conecta por ODBC a 127.0.0.1
+    volumes:
+      - ${DATA_DIR:-./data}/mariadb:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  # Instala/actualiza el esquema Realtime oficial de Asterisk (Alembic). Se ejecuta a demanda: --profile tools
+  schema:
+    image: ${IMAGE_SCHEMA:-ghcr.io/uribes78/voip-manager-schema:latest}
+    profiles: ['tools']
+    environment:
+      DB_URL: mysql+pymysql://${DB_USER:-asterisk}:${DB_PASSWORD}@mariadb:3306/${DB_NAME:-asterisk}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  asterisk:
+    image: ${IMAGE_ASTERISK:-ghcr.io/uribes78/voip-manager-asterisk:latest}
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: ${DB_NAME:-asterisk}
+      DB_USER: ${DB_USER:-asterisk}
+      DB_PASSWORD: ${DB_PASSWORD}
+      AMI_USER: ${AMI_USER:-voipmanager}
+      AMI_SECRET: ${AMI_SECRET:?Define AMI_SECRET}
+    volumes:
+      - ./asterisk-templates:/etc/asterisk/custom:ro
+      - ${DATA_DIR:-./data}/asterisk/etc:/etc/asterisk
+      - ${DATA_DIR:-./data}/asterisk/moh:/usr/share/asterisk/moh
+      - ${DATA_DIR:-./data}/asterisk/log:/var/log/asterisk
+      - ${DATA_DIR:-./data}/asterisk/spool:/var/spool/asterisk
+      - ${DATA_DIR:-./data}/asterisk/lib:/var/lib/asterisk
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'asterisk', '-rx', 'core show version']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ${IMAGE_API:-ghcr.io/uribes78/voip-manager-api:latest}
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false   # en producción siempre existe; opcional para validar el archivo en CI
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: '3000'
+      DB_HOST: mariadb
+      DB_PORT: '3306'
+      AMI_HOST: host.docker.internal
+      AMI_PORT: '5038'
+      ASTERISK_ETC_PATH: /data/asterisk/etc
+      ASTERISK_MOH_PATH: /data/asterisk/moh
+      ASTERISK_DATA_REMOTE_PATH: /usr/share/asterisk
+      ASTERISK_LOG_PATH: /data/asterisk/log/full
+      # Asterisk (red del host) alcanza a la API por el puerto publicado en 127.0.0.1
+      PUBLIC_WS_URL: ws://127.0.0.1:3000
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '127.0.0.1:3000:3000'
+    volumes:
+      - ${DATA_DIR:-./data}/asterisk/etc:/data/asterisk/etc
+      - ${DATA_DIR:-./data}/asterisk/moh:/data/asterisk/moh
+      - ${DATA_DIR:-./data}/asterisk/log:/data/asterisk/log:ro
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  # Proxy HTTPS. Con DOMAIN=nombre.publico obtiene certificado de Let's Encrypt; con una IP o nombre interno usa
+  # un certificado propio (tls internal). Para WebSockets de escucha en vivo el navegador exige HTTPS.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      TLS_MODE: ${TLS_MODE:-internal}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${DATA_DIR:-./data}/caddy/data:/data
+      - ${DATA_DIR:-./data}/caddy/config:/config
+    depends_on:
+      - api

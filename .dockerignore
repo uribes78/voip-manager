@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+**/dist
+docker/asterisk/etc
+docker/asterisk/moh
+docker/asterisk/log
+docker/mariadb/data
+.env
+.env.*
+!.env.example
+.git
+.github
+deploy
+docs
+*.md
+!README.md

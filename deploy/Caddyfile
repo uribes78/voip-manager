@@ -1,0 +1,14 @@
+# TLS_MODE=internal  -> certificado autofirmado de Caddy (IP o nombre interno). Instala la CA de data/caddy en los equipos
+#                       o acepta la advertencia del navegador.
+# TLS_MODE=auto      -> Let's Encrypt; DOMAIN debe resolver públicamente al servidor y el puerto 80/443 estar abierto.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:3000
+	tls {$TLS_MODE}
+	log {
+		output file /data/access.log {
+			roll_size 20mb
+			roll_keep 5
+		}
+	}
+}

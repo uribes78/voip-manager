@@ -110,6 +110,11 @@ Eliminar una extensión/troncal borra sus filas `ps_*` (deja de autenticar de in
 
 ## Producción
 
+Para instalar todo en una sola VM con Docker (MariaDB, Asterisk, API/web y HTTPS) sigue [docs/DEPLOY.md](docs/DEPLOY.md);
+`deploy/install.sh` lo deja funcionando en unos minutos a partir de las imágenes publicadas en GHCR.
+
+Si prefieres correr la API sin Docker:
+
 ```bash
 npm run build                       # shared → api → web
 NODE_ENV=production node apps/api/dist/index.js   # sirve /api y el frontend desde apps/web/dist

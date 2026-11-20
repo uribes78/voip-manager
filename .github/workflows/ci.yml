@@ -32,7 +32,9 @@ jobs:
       - run: npm run build -w @voip-manager/api
       - run: npm run build -w @voip-manager/web
       - name: Validar compose de producción
-        run: docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.production.example config -q
+        run: |
+          docker compose version
+          docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.production.example config >/dev/null
 
   images:
     name: Imágenes Docker (${{ matrix.image }})

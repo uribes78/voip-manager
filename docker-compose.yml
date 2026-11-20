@@ -53,6 +53,9 @@ services:
       DB_PASSWORD: asterisk
       AMI_USER: voipmanager
       AMI_SECRET: voipmanager
+      # IP del host que verán los teléfonos de la LAN (SIP/SDP) y red interna de Docker que no se sustituye
+      EXTERNAL_ADDRESS: ${EXTERNAL_ADDRESS:-}
+      LOCAL_NET: ${LOCAL_NET:-}
     ports:
       - '5038:5038'         # AMI
       - '5060:5060/udp'     # SIP UDP

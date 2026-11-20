@@ -6,7 +6,8 @@
 set -e
 export DB_HOST="${DB_HOST:-mariadb}" DB_PORT="${DB_PORT:-3306}" DB_NAME="${DB_NAME:-asterisk}" \
        DB_USER="${DB_USER:-asterisk}" DB_PASSWORD="${DB_PASSWORD:-asterisk}" \
-       AMI_USER="${AMI_USER:-voipmanager}" AMI_SECRET="${AMI_SECRET:-voipmanager}"
+       AMI_USER="${AMI_USER:-voipmanager}" AMI_SECRET="${AMI_SECRET:-voipmanager}" \
+       EXTERNAL_ADDRESS="${EXTERNAL_ADDRESS:-}" LOCAL_NET="${LOCAL_NET:-}"
 FIRST_BOOT=0
 if [ -z "$(ls -A /etc/asterisk 2>/dev/null | grep -v '^custom$')" ]; then
   echo ">> /etc/asterisk vacío: copiando configuración por defecto del paquete"
@@ -16,7 +17,7 @@ fi
 for f in /etc/asterisk/custom/*.conf; do
   dest="/etc/asterisk/$(basename "$f")"
   if [ ! -f "$dest" ] || [ "$FIRST_BOOT" = "1" ] || [ "${FORCE_TEMPLATES:-0}" = "1" ]; then
-    envsubst '${DB_HOST} ${DB_PORT} ${DB_NAME} ${DB_USER} ${DB_PASSWORD} ${AMI_USER} ${AMI_SECRET}' < "$f" > "$dest"
+    envsubst '${DB_HOST} ${DB_PORT} ${DB_NAME} ${DB_USER} ${DB_PASSWORD} ${AMI_USER} ${AMI_SECRET} ${EXTERNAL_ADDRESS} ${LOCAL_NET}' < "$f" > "$dest"
     echo ">> plantilla renderizada: $(basename "$f")"
   fi
 done

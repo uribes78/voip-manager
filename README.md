@@ -42,6 +42,12 @@ npm run dev                     # shared (tsc --watch) + API :3000 (docs en /api
                                 # Si 5173 está ocupado, Vite toma el siguiente libre: usa la URL que imprime en consola.
 ```
 
+Teléfonos en otros equipos de la LAN: Asterisk corre en un contenedor con IP propia, así que define en `.env`
+`EXTERNAL_ADDRESS` (IP de tu equipo que verán los teléfonos) y `LOCAL_NET` (red interna de Docker, para los softphones
+del propio equipo) antes del primer arranque; se escriben en el transporte UDP de `pjsip.conf`. Si un softphone local
+ocupa el puerto 5060/udp cuando arranca el contenedor, Docker no podrá publicarlo: ciérralo o cambia su puerto y
+recrea el contenedor (`docker compose up -d --force-recreate asterisk`).
+
 Flujo típico: crear extensiones en la UI → registrar un softphone contra `localhost:5060` con usuario/secret de la
 extensión → ver estado en el Dashboard → probar con "Probar llamada" (Originate) → revisar CDR y Logs.
 
